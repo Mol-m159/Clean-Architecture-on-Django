@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Панель администратора{% endblock %}
+{% block page_title %}Панель администратора{% endblock %}
+
+{% block page_actions %}
+<div class="btn-toolbar mb-2 mb-md-0">
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card stat-card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Пользователи</h5>
+                        <h2 class="mb-0">{{total_users}}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-3x"></i>
+                    </div>
+                </div>
+                <p class="card-text mt-2">
+                    <i class="fas fa-arrow-up"></i> {{new_users_today}} за сегодня
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card stat-card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Персонажи</h5>
+                        <h2 class="mb-0">{{total_characters}}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-friends fa-3x"></i>
+                    </div>
+                </div>
+                <p class="card-text mt-2">
+                    <i class="fas fa-arrow-up"></i> {{new_characters_today}} за сегодня
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card stat-card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Homebrew</h5>
+                        <h2 class="mb-0">{{total_homebrew}}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-magic fa-3x"></i>
+                    </div>
+                </div>
+                <p class="card-text mt-2">
+                    <i class="fas fa-arrow-up"></i> {{new_homebrew_today}} за сегодня
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card stat-card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Активные сессии</h5>
+                        <h2 class="mb-0">{{active_sessions}}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-3x"></i>
+                    </div>
+                </div>
+                <p class="card-text mt-2">
+                    <i class="fas fa-check-circle"></i> Система работает
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-bar"></i> Действия</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{% url 'admin_user_stats' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-pie me-2"></i> Статистика пользователей
+                    </a>
+                    <a href="{% url 'admin_session_stats' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-line me-2"></i> Статистика сессий
+                    </a>
+                    <a href="{% url 'moderation_queue' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tasks"></i> Очередь модерации
+                    </a>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-history"></i> Последние активности</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Время входа</th>
+                                <th>Пользователь</th>
+                                <th>Роль</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if recent_activities %}
+                            {% for activ in recent_activities %}
+                            <tr>
+                                <td>
+                                    <small>{{ activ.login_date|slice:":19" }}</small>
+                                </td>
+                                <td>
+                                    <strong>User #{{ activ.user_id }}</strong>
+                                </td>
+                                <td>
+                                    <strong>{{ activ.user_type }}</strong>
+                                </td>
+                            
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="9" class="text-center py-4">
+                                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">Нет данных об активности</p>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

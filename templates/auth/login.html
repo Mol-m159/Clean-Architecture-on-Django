@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Вход в систему{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center">
+                <h4><i class="fas fa-sign-in-alt"></i> Вход в систему</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'login' %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="user_id" class="form-label">ID пользователя:</label>
+                        <input type="number" class="form-control" id="user_id" name="user_id" required 
+                               placeholder="Введите ваш ID">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="user_type" class="form-label">Роль:</label>
+                        <select class="form-select" id="user_type" name="user_type" required>
+                            <option value="">Выберите роль</option>
+                            <option value="admin">Администратор</option>
+                            <option value="moderator">Модератор</option>
+                            <option value="user">Пользователь</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Войти
+                        </button>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <h6>Тестовые пользователи:</h6>
+                    <div class="row">
+                        <div class="col">
+                            <small class="text-muted">Админ: 40212</small>
+                        </div>
+                        <div class="col">
+                            <small class="text-muted">Модератор: 40213</small>
+                        </div>
+                        <div class="col">
+                            <small class="text-muted">Пользователь: 50000</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Персонаж #{{ character.character_id }}{% endblock %}
+{% block page_title %}Персонаж #{{ character.character_id }}{% endblock %}
+
+{% block page_actions %}
+<div class="btn-toolbar mb-2 mb-md-0">
+    <div class="btn-group me-2">
+        <a href="{% url 'character_list' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Назад к списку
+        </a>
+        <a href="#" class="btn btn-sm btn-primary" onclick="editCharacterField()">
+            <i class="fas fa-edit"></i> Редактировать
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-user"></i> Основная информация</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th>ID:</th>
+                        <td>#{{ character.character_id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Владелец:</th>
+                        <td>User #{{ character.user_id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Система:</th>
+                        <td>
+                            <span class="badge bg-secondary">
+                                Система #{{ character.system_id }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Дата создания:</th>
+                        <td>{{ character.created_date|slice:":19" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Последнее изменение:</th>
+                        <td>{{ character.last_modified_date|slice:":19" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-history"></i> История изменений</h5>
+            </div>
+            <div class="card-body">
+                {% if edit_history %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Тип изменения</th>
+                                    <th>Описание</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for edit in edit_history %}
+                                <tr>
+                                    <td>{{ edit.edit_date|slice:":19" }}</td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            {{ edit.edit_type }}
+                                        </span>
+                                    </td>
+                                    <td>Изменение персонажа</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-history fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">Нет истории изменений</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function editCharacter() {
+    const newSystemId = prompt('Введите новый system_id:', '{{ character.system_id }}');
+    
+    if (!newSystemId) {
+        return;
+    }
+    
+    fetch(`/user/api/characters/{{ character.character_id }}/update/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: JSON.stringify({ system_id: newSystemId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Персонаж обновлен!');
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка сети');
+    });
+}
+
+// Навешиваем обработчики
+document.addEventListener('DOMContentLoaded', function() {
+    const editBtn = document.querySelector('.btn-primary');
+    if (editBtn && editBtn.textContent.includes('Редактировать')) {
+        editBtn.onclick = function(e) {
+            e.preventDefault();
+            editCharacter();
+        };
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

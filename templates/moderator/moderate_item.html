@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Модерация элемента #{{ item.entity_id }}{% endblock %}
+{% block page_title %}Модерация элемента #{{ item.entity_id }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'moderation_queue' %}" class="btn btn-sm btn-outline-secondary">
+    <i class="fas fa-arrow-left"></i> Назад к очереди
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Информация об элементе</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tr>
+                                <th>ID:</th>
+                                <td>{{ item.entity_id }}</td>
+                            </tr>
+                            <tr>
+                                <th>Тип:</th>
+                                <td>
+                                    <span class="badge bg-info">
+                                        {{ item.entity_type|default:"Не указан" }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Автор:</th>
+                                <td>User #{{ item.author_id }}</td>
+                            </tr>
+                            <tr>
+                                <th>Дата создания:</th>
+                                <td>{{ item.created_date|default:"Не указана" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Статус:</th>
+                                <td>
+                                    <span class="badge bg-warning">На модерации</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Система:</h6>
+                        <p>{{ item.system_id|default:"Не указана" }}</p>
+                        
+                        <h6>Версии:</h6>
+                        <p>{{ item.current_version|default:"1" }} версий</p>
+                        
+                        <h6>Просмотры:</h6>
+                        <p>{{ item.view_count|default:"0" }} просмотров</p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6>Описание контента:</h6>
+                <div class="border p-3 bg-light rounded">
+                    <p>Здесь будет отображаться содержимое homebrew элемента. </p>
+                    <p>Это тестовый контент для демонстрации. </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-history"></i> История изменений</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Версия</th>
+                                <th>Дата изменения</th>
+                    
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in edit_history %}
+                            <tr>
+                                <td>{{ i.version_number }}</td>
+                                <td>{{ i.edit_date|slice:":16" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0"><i class="fas fa-gavel"></i> Решение модератора</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'moderate_item' item.entity_id %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Выберите решение:</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="decision" id="approve" value="approved" required>
+                            <label class="form-check-label text-success" for="approve">
+                                <i class="fas fa-check-circle"></i> Одобрить
+                            </label>
+                            <small class="d-block text-muted">Контент соответствует правилам и будет опубликован.</small>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="decision" id="reject" value="rejected" required>
+                            <label class="form-check-label text-danger" for="reject">
+                                <i class="fas fa-times-circle"></i> Отклонить
+                            </label>
+                            <small class="d-block text-muted">Контент нарушает правила и будет отклонен.</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Комментарий (необязательно):</label>
+                        <textarea class="form-control" id="comment" name="comment" rows="3" 
+                                  placeholder="Укажите причину решения..."></textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-paper-plane"></i> Отправить решение
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

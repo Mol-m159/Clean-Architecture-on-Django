@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Статистика пользователей{% endblock %}
+{% block page_title %}Статистика пользователей{% endblock %}
+
+{% block page_actions %}
+<div class="btn-toolbar mb-2 mb-md-0">
+    <div class="btn-group me-2">
+        
+        <button class="btn btn-sm btn-outline-secondary" onclick="refreshData()">
+            <i class="fas fa-sync-alt"></i> Обновить
+        </button>
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                    data-bs-toggle="dropdown">
+                <i class="fas fa-filter"></i> Фильтры
+            </button>
+            <div class="dropdown-menu p-3" style="width: 300px;">
+                <form id="filterForm" onsubmit="return applyFilters(event)">
+                    <div class="mb-2">
+                        <label class="form-label">Система:</label>
+                        <select class="form-select form-select-sm" name="system_id">
+                            <option value="">Все системы</option>
+                            {% for system in systems %}
+                            <option value="{{ system.system_id }}" 
+                                    {% if filters.system_id == system.system_id|stringformat:"s" %}selected{% endif %}>
+                                Система #{{ system.system_id }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Минимум персонажей:</label>
+                        <input type="number" class="form-control form-control-sm" 
+                               name="min_characters" value="{{ filters.min_characters|default:'' }}"
+                               placeholder="0">
+                    </div>
+                    <div class="mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" 
+                                   name="has_homebrew" id="has_homebrew"
+                                   {% if filters.has_homebrew %}checked{% endif %}>
+                            <label class="form-check-label" for="has_homebrew">
+                                Только с контентом
+                            </label>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-check"></i> Применить
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                onclick="clearFilters()">
+                            <i class="fas fa-times"></i> Сбросить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <h5>Всего записей</h5>
+                        <h2>{{ total_count }}</h2>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h5>Записей на странице</h5>
+                        <div class="input-group input-group-sm" style="width: 100px; margin: 0 auto;">
+                            <input type="number" class="form-control text-center" 
+                                   id="perPageInput" value="{{ per_page }}" min="10" max="100">
+                            <button class="btn btn-outline-primary" onclick="changePerPage()">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h5>Страница</h5>
+                        <h4>{{ current_page }} / {{ total_pages }}</h4>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h5>Фильтры</h5>
+                        {% if filters %}
+                            <span class="badge bg-info">{{ filters|length }} активен</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Нет</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-table"></i> Детальная статистика пользователей</h5>
+            <div>
+                <span class="badge bg-primary">Страница {{ current_page }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="userStatsTable">
+                <thead>
+                    <tr>
+                        <th>ID пользователя</th>
+                        <th>Система</th>
+                        <th>Персонажей</th>
+                        <th>Контента</th>
+                        <th>Последняя активность</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if user_stats %}
+                        {% for stat in user_stats %}
+                        <tr>
+                            <td>
+                                <strong>#{{ stat.user_id }}</strong>
+                            </td>
+                            <td>
+                                {% if stat.system_id %}
+                                    <span class="badge bg-secondary">Система #{{ stat.system_id }}</span>
+
+                                {% else %}
+                                    <span class="badge bg-light text-dark">Нет системы</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ stat.character_count|default:"0" }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-success">{{ stat.homebrew_count|default:"0" }}</span>
+                            </td>
+                            <td>
+                                {% if stat.last_activity %}
+                                    {{ stat.last_activity|slice:":16" }}
+                                {% else %}
+                                    Неизвестно
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewUserDetails('{{ stat.user_id }}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-info" onclick="sendMessage('{{ stat.user_id }}')">
+                                    <i class="fas fa-envelope"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Нет данных о пользователях</p>
+                                <button class="btn btn-primary" onclick="refreshData()">
+                                    <i class="fas fa-sync-alt"></i> Загрузить данные
+                                </button>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Пагинация -->
+        {% if total_pages > 1 %}
+        <nav aria-label="Навигация по страницам">
+            <ul class="pagination justify-content-center">
+                {% if current_page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% for key, value in filters.items %}&{{ key }}={{ value }}{% endfor %}&per_page={{ per_page }}">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ current_page|add:'-1' }}{% for key, value in filters.items %}&{{ key }}={{ value }}{% endfor %}&per_page={{ per_page }}">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for page_num in page_range %}
+                    {% if page_num == current_page %}
+                    <li class="page-item active"><a class="page-link" href="#">{{ page_num }}</a></li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_num }}{% for key, value in filters.items %}&{{ key }}={{ value }}{% endfor %}&per_page={{ per_page }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if current_page < total_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ current_page|add:'1' }}{% for key, value in filters.items %}&{{ key }}={{ value }}{% endfor %}&per_page={{ per_page }}">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ total_pages }}{% for key, value in filters.items %}&{{ key }}={{ value }}{% endfor %}&per_page={{ per_page }}">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                </li>
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        
+        <div class="text-center mt-2">
+            <small class="text-muted">
+                Показаны записи с {{ start_index }} по {{ end_index }} из {{ total_count }}
+            </small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Вычисляем диапазон страниц для отображения
+    const currentPage = '{{ current_page }}';
+    const totalPages = '{{ total_pages }}';
+    const startIndex = ('{{ current_page }}' - 1) * '{{ per_page }}' + 1;
+    const endIndex = Math.min('{{ current_page }}' * '{{ per_page }}', '{{ total_count }}');
+    
+    // Функции пагинации
+    function changePerPage() {
+        const perPage = document.getElementById('perPageInput').value;
+        if (perPage >= 10 && perPage <= 100) {
+            window.location.href = `?page=1{% for key, value in filters.items %}&{{ key }}={{ value }}{% endfor %}&per_page=${perPage}`;
+        } else {
+            alert('Количество записей на странице должно быть от 10 до 100');
+        }
+    }
+    
+    function applyFilters(event) {
+        event.preventDefault();
+        const formData = new FormData(document.getElementById('filterForm'));
+        const params = new URLSearchParams();
+        
+        for (let [key, value] of formData.entries()) {
+            if (value) {
+                params.append(key, value);
+            }
+        }
+        
+        window.location.href = `?page=1&${params.toString()}&per_page={{ per_page }}`;
+        return false;
+    }
+    
+    function clearFilters() {
+        window.location.href = '?page=1&per_page={{ per_page }}';
+    }
+    
+    // AJAX загрузка данных (опционально)
+    function loadPage(page) {
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', page);
+        
+        fetch(`/admin/user-stats/ajax/?${params.toString()}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateTable(data.data);
+                    updatePagination(data.pagination);
+                } else {
+                    alert('Ошибка загрузки данных: ' + data.error);
+                }
+            });
+    }
+    
+    // Генерация диапазона страниц для отображения
+    function getPageRange(current, total, delta = 2) {
+        const range = [];
+        const left = current - delta;
+        const right = current + delta;
+        
+        for (let i = 1; i <= total; i++) {
+            if (i === 1 || i === total || (i >= left && i <= right)) {
+                range.push(i);
+            } else if (i === left - 1 || i === right + 1) {
+                range.push('...');
+            }
+        }
+        
+        return range.filter((value, index, self) => self.indexOf(value) === index);
+    }
+    
+    // Данные для графиков (можно загружать через AJAX)
+    const activityChart = new Chart(document.getElementById('activityChart'), {
+        type: 'pie',
+        data: {
+            labels: ['С контентом', 'Только персонажи', 'Нет активности'],
+            datasets: [{
+                data: [45, 30, 25],
+                backgroundColor: [
+                    '#28a745',
+                    '#17a2b8',
+                    '#dc3545'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    // Остальные функции...
+    function viewUserDetails(userId) {
+        alert('Просмотр деталей пользователя #' + userId + ' будет реализован позже');
+    }
+    
+    function sendMessage(userId) {
+        alert('Отправка сообщения пользователю #' + userId + ' будет реализована позже');
+    }
+    
+    function exportData() {
+        alert('Экспорт данных в CSV будет реализован позже');
+    }
+    
+    function refreshData() {
+        location.reload();
+    }
+    
+    // Автоматическое обновление таблицы через AJAX каждые 30 секунд
+    // setInterval(() => {
+    //     loadPage(currentPage);
+    // }, 30000);
+</script>
+
+<style>
+    .page-link {
+        cursor: pointer;
+    }
+    
+    .pagination .disabled .page-link {
+        cursor: not-allowed;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.1);
+    }
+    
+    .badge {
+        font-size: 0.85em;
+    }
+</style>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Помощь{% endblock %}
+{% block page_title %}Помощь и документация{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h5>Навигация</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <a href="#getting-started" class="list-group-item list-group-item-action">
+                        Начало работы
+                    </a>
+                    <a href="#characters" class="list-group-item list-group-item-action">
+                        Персонажи
+                    </a>
+                    <a href="#homebrew" class="list-group-item list-group-item-action">
+                        Контент (Homebrew)
+                    </a>
+                    <a href="#moderation" class="list-group-item list-group-item-action">
+                        Модерация
+                    </a>
+                    <a href="#statistics" class="list-group-item list-group-item-action">
+                        Статистика
+                    </a>
+                    <a href="#api" class="list-group-item list-group-item-action">
+                        API документация
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-body">
+                <h4 id="getting-started" class="border-bottom pb-2">Начало работы</h4>
+                <h5>Вход в систему</h5>
+                <p>Для входа в систему необходимо:</p>
+                <ol>
+                    <li>Перейти на страницу входа</li>
+                    <li>Ввести ID пользователя</li>
+                    <li>Выбрать роль (администратор, модератор, пользователь)</li>
+                    <li>Нажать кнопку "Войти"</li>
+                </ol>
+                
+                <h5>Тестовые пользователи:</h5>
+                <ul>
+                    <li><strong>Администратор:</strong> ID 40212</li>
+                    <li><strong>Модератор:</strong> ID 40213</li>
+                    <li><strong>Пользователь:</strong> ID 50000</li>
+                </ul>
+                
+                <h4 id="characters" class="border-bottom pb-2 mt-4">Управление персонажами</h4>
+                <h5>Создание персонажа</h5>
+                <p>Чтобы создать нового персонажа:</p>
+                <ol>
+                    <li>Перейдите в раздел "Мои персонажи"</li>
+                    <li>Нажмите кнопку "Новый персонаж"</li>
+                    <li>Выберите игровую систему</li>
+                    <li>Укажите имя персонажа (опционально)</li>
+                    <li>Нажмите "Создать персонажа"</li>
+                </ol>
+                
+                <h5>Редактирование персонажа</h5>
+                <p>После создания персонажа вы можете:</p>
+                <ul>
+                    <li>Просматривать детальную информацию</li>
+                    <li>Редактировать характеристики</li>
+                    <li>Повышать уровень</li>
+                    <li>Изменять оборудование</li>
+                    <li>Просматривать историю изменений</li>
+                </ul>
+                
+                <h4 id="homebrew" class="border-bottom pb-2 mt-4">Создание контента (Homebrew)</h4>
+                <p>Homebrew - это пользовательский контент, который может включать:</p>
+                <ul>
+                    <li>Заклинания</li>
+                    <li>Магические предметы</li>
+                    <li>Классы персонажей</li>
+                    <li>Расы</li>
+                    <li>Способности и черты</li>
+                </ul>
+                
+                <h5>Процесс создания:</h5>
+                <ol>
+                    <li>Перейдите в раздел "Мой контент"</li>
+                    <li>Нажмите "Создать контент"</li>
+                    <li>Выберите тип контента</li>
+                    <li>Укажите игровую систему</li>
+                    <li>Заполните название и описание</li>
+                    <li>Добавьте детальное содержание в JSON формате</li>
+                    <li>Сохраните как черновик или отправьте на модерацию</li>
+                </ol>
+                
+                <h4 id="moderation" class="border-bottom pb-2 mt-4">Модерация контента</h4>
+                <p>Для модераторов и администраторов доступны функции проверки контента:</p>
+                <ul>
+                    <li><strong>Очередь модерации:</strong> Список записей, ожидающих проверки</li>
+                    <li><strong>Проверка записи:</strong> Детальный просмотр контента</li>
+                    <li><strong>Решение:</strong> Одобрить или отклонить контент</li>
+                    <li><strong>Комментарии:</strong> Указание причины отклонения</li>
+                </ul>
+                
+                <h4 id="statistics" class="border-bottom pb-2 mt-4">Статистика и аналитика</h4>
+                <p>Доступные статистические данные:</p>
+                <ul>
+                    <li><strong>Статистика пользователей:</strong> Активность, созданный контент</li>
+                    <li><strong>Статистика сессий:</strong> Длительность, действия пользователей</li>
+                    <li><strong>Статистика систем:</strong> Использование игровых систем</li>
+                    <li><strong>Модерационная статистика:</strong> Эффективность модераторов</li>
+                </ul>
+                
+                <h4 id="api" class="border-bottom pb-2 mt-4">API документация</h4>
+                <p>Система предоставляет RESTful API для интеграции с другими приложениями.</p>
+                <p><strong>Базовый URL API:</strong> <code>{{ api_base_url }}</code></p>
+                
+                <h5>Основные эндпоинты:</h5>
+                <ul>
+                    <li><code>/api/users/</code> - Пользователи</li>
+                    <li><code>/api/characters/</code> - Персонажи</li>
+                    <li><code>/api/homebrew-entities/</code> - Пользовательский контент</li>
+                    <li><code>/api/moderator/homebrew/</code> - Модерация контента</li>
+                    <li><code>/api/admin/statistics/</code> - Статистика</li>
+                </ul>
+                
+                <div class="alert alert-info mt-4">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Нужна дополнительная помощь?</strong> Свяжитесь с администратором системы или обратитесь к документации API.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

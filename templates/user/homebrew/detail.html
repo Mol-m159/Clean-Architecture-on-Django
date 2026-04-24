@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ homebrew.entity_type|default:"Контент" }} #{{ homebrew.entity_id }}{% endblock %}
+{% block page_title %}{{ homebrew.entity_type|default:"Контент" }} #{{ homebrew.entity_id }}{% endblock %}
+
+{% block page_actions %}
+<div class="btn-toolbar mb-2 mb-md-0">
+    <div class="btn-group me-2">
+        <a href="{% url 'homebrew_list' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Назад
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Информация о контенте</h5>
+                    <div>
+                        <span class="badge bg-{{ homebrew.status_color }} fs-6">
+                            {% if homebrew.status == 'approved' %}
+                            <i class="fas fa-check"></i> Одобрено
+                            {% elif homebrew.status == 'moderation' %}
+                            <i class="fas fa-clock"></i> На модерации
+                            {% elif homebrew.status == 'rejected' %}
+                            <i class="fas fa-times"></i> Отклонено
+                            {% elif homebrew.status == 'draft' %}
+                            <i class="fas fa-edit"></i> Черновик
+                            {% else %}
+                            {{ homebrew.status }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tr>
+                                <th>ID:</th>
+                                <td>#{{ homebrew.entity_id }}</td>
+                            </tr>
+                            <tr>
+                                <th>Тип:</th>
+                                <td>
+                                    <span class="badge bg-info">
+                                        {{ homebrew.entity_type|default:"Неизвестно" }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Автор:</th>
+                                <td>User #{{ homebrew.author_id }}</td>
+                            </tr>
+                            <tr>
+                                <th>Система:</th>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        Система #{{ homebrew.system_id }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Дата создания:</th>
+                                <td>{{ homebrew.created_date|slice:":19" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Просмотры:</th>
+                                <td>
+                                    <span class="badge bg-primary">
+                                        <i class="fas fa-eye"></i> {{ homebrew.view_count|default:"0" }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <h6>Название:</h6>
+                <div class="alert alert-light">
+                    <h4 class="mb-0">{{ homebrew.title|default:"Без названия" }}</h4>
+                </div>
+
+                <h6 class="mt-4">Описание:</h6>
+                <div class="border p-3 bg-light rounded">
+                    {{ homebrew.description|default:"Описание отсутствует"|linebreaks }}
+                </div>
+
+                {% if homebrew.content %}
+                <h6 class="mt-4">Детальное содержание:</h6>
+                <div class="border p-3 bg-dark text-light rounded">
+                    <pre class="mb-0" style="white-space: pre-wrap;">{{ homebrew.content|default:"{}" }}</pre>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-history"></i> История изменений</h5>
+            </div>
+            <div class="card-body">
+                {% if edit_history %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Версия</th>
+                                <th>Дата изменения</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for edit in edit_history %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-dark">{{ edit.version_number }}</span>
+                                </td>
+                                <td>{{ edit.edit_date|slice:":19" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-history fa-2x text-muted mb-2"></i>
+                    <p class="text-muted">Нет истории изменений</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-cogs"></i> Управление</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if homebrew.status == 'draft' %}
+                    <button class="btn btn-success" onclick="submitForModeration()">
+                        <i class="fas fa-paper-plane"></i> Отправить на модерацию
+                    </button>
+                    <button class="btn btn-primary" onclick="editHomebrew()">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </button>
+                    {% elif homebrew.status == 'rejected' %}
+                    <button class="btn btn-warning" onclick="editAndResubmit()">
+                        <i class="fas fa-redo"></i> Исправить и отправить снова
+                    </button>
+                    <button class="btn btn-primary" onclick="editHomebrew()">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </button>
+                    {% elif homebrew.status == 'approved' %}
+                    <button class="btn btn-secondary" disabled>
+                        <i class="fas fa-check"></i> Одобрено (редактирование невозможно)
+                    </button>
+                    {% elif homebrew.status == 'moderation' %}
+                    <button class="btn btn-warning" disabled>
+                        <i class="fas fa-clock"></i> Ожидает модерации
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if homebrew.status == 'rejected' and homebrew.rejection_reason %}
+        <div class="card mb-4 border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Причина отклонения</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    {{ homebrew.rejection_reason }}
+                </div>
+                <p class="small text-muted">
+                    <i class="fas fa-lightbulb"></i>
+                    <strong>Совет:</strong> Исправьте указанные проблемы и отправьте контент на повторную модерацию.
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if moderation_history %}
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-gavel"></i> История модерации</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for moderation in moderation_history %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <small class="text-muted">{{ moderation.moderation_date|slice:":10" }}</small>
+                            <span
+                                class="badge bg-{% if moderation.new_status == 'approved' %}success{% else %}danger{% endif %}">
+                                {{ moderation.new_status }}
+                            </span>
+                        </div>
+                        <p class="mb-1 small">
+                            Модератор: #{{ moderation.moderator_id }}
+                            {% if moderation.comment %}
+                            <br>{{ moderation.comment }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% block extra_js %}
+<script>
+// Функция отправки на модерацию
+function submitForModeration() {
+    const entityId = '{{ homebrew.entity_id }}';
+    
+    if (!confirm('Отправить контент на модерацию?')) {
+        return;
+    }
+    
+    fetch(`/user/api/homebrew/${entityId}/submit/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Контент отправлен на модерацию!');
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка сети');
+    });
+}
+
+// Функция редактирования контента
+function editHomebrew() {
+    const entityId = '{{ homebrew.entity_id }}';
+    const currentType = '{{ homebrew.entity_type }}';
+    const currentSystem = '{{ homebrew.system_id }}';
+    
+    // Запрашиваем новый system_id
+    const newSystemId = prompt('Введите новый ID системы:', currentSystem);
+    if (!newSystemId) return;
+    
+    // Запрашиваем новый тип
+    const typeOptions = ['spell', 'item', 'class', 'race', 'ability', 'other'];
+    const typePrompt = `Введите новый тип (${typeOptions.join(', ')}):\nТекущий: ${currentType}`;
+    const newType = prompt(typePrompt, currentType);
+    if (!newType) return;
+    
+    // Проверяем, есть ли изменения
+    const systemChanged = (parseInt(newSystemId) !== currentSystem);
+    const typeChanged = (newType !== currentType);
+    
+    if (!systemChanged && !typeChanged) {
+        alert('Нет изменений');
+        return;
+    }
+    
+    const updateData = {};
+    if (systemChanged) {
+        updateData.system_id = parseInt(newSystemId);
+    }
+    if (typeChanged) {
+        updateData.entity_type = newType;
+    }
+    
+    fetch(`/user/api/homebrew/${entityId}/update/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: JSON.stringify(updateData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.status_changed) {
+                alert('Контент обновлен! Статус изменен на "Черновик"');
+            } else {
+                alert('Контент обновлен! Версия увеличена.');
+            }
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка сети');
+    });
+}
+
+// Функция создания новой версии
+function createNewVersion() {
+    alert('Для создания новой версии отредактируйте контент (измените систему или тип). При сохранении версия увеличится автоматически.');
+    editHomebrew();
+}
+
+// Функция исправления и повторной отправки
+function editAndResubmit() {
+    editHomebrew();
+}
+
+// Функции для совместимости со старыми вызовами
+function submitForModerationAPI() {
+    submitForModeration();
+}
+
+function editHomebrewViaAPI() {
+    editHomebrew();
+}
+
+// Навешиваем обработчики
+document.addEventListener('DOMContentLoaded', function() {
+    const submitBtn = document.querySelector('.btn-success');
+    if (submitBtn && submitBtn.textContent.includes('Отправить')) {
+        submitBtn.onclick = function(e) {
+            e.preventDefault();
+            submitForModeration();
+        };
+    }
+    
+    const editBtn = document.querySelector('.btn-primary');
+    if (editBtn && editBtn.textContent.includes('Редактировать')) {
+        editBtn.onclick = function(e) {
+            e.preventDefault();
+            editHomebrew();
+        };
+    }
+    
+    const versionBtn = document.querySelector('.btn-info');
+    if (versionBtn && versionBtn.textContent.includes('Создать новую версию')) {
+        versionBtn.onclick = function(e) {
+            e.preventDefault();
+            createNewVersion();
+        };
+    }
+    
+    const resubmitBtn = document.querySelector('.btn-warning');
+    if (resubmitBtn && resubmitBtn.textContent.includes('Исправить и отправить')) {
+        resubmitBtn.onclick = function(e) {
+            e.preventDefault();
+            editAndResubmit();
+        };
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

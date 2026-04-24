@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Регистрация{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white text-center">
+                <h4><i class="fas fa-user-plus"></i> Регистрация</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" id="registerForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Имя пользователя:</label>
+                        <input type="text" class="form-control" id="username" name="username" required 
+                               placeholder="Придумайте имя пользователя">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email:</label>
+                        <input type="email" class="form-control" id="email" name="email" required 
+                               placeholder="Введите ваш email">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Пароль:</label>
+                        <input type="password" class="form-control" id="password" name="password" required 
+                               placeholder="Придумайте пароль">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Подтверждение пароля:</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required 
+                               placeholder="Повторите пароль">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="agree_terms" required>
+                            <label class="form-check-label" for="agree_terms">
+                                Я согласен с <a href="#">условиями использования</a>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-user-plus"></i> Зарегистрироваться
+                        </button>
+                        <a href="{% url 'login' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-sign-in-alt"></i> Уже есть аккаунт?
+                        </a>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Внимание!</strong> В текущей версии регистрация работает через API.
+                    После регистрации вы получите ID пользователя для входа.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        
+        if (password !== confirmPassword) {
+            alert('Пароли не совпадают!');
+            return;
+        }
+        
+        // Здесь будет AJAX запрос к API регистрации
+        alert('Регистрация через API будет реализована позже');
+        
+        // Перенаправление на страницу входа
+        window.location.href = "{% url 'login' %}";
+    });
+</script>
+{% endblock %}
+{% endblock %}

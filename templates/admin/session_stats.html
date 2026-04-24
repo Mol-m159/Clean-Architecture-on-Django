@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Статистика сессий{% endblock %}
+{% block page_title %}Статистика сессий{% endblock %}
+
+{% block page_actions %}
+<div class="btn-toolbar mb-2 mb-md-0">
+    <div class="btn-group me-2">
+        <button class="btn btn-sm btn-outline-secondary" onclick="refreshData()">
+            <i class="fas fa-sync-alt"></i> Обновить
+        </button>
+    <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="fas fa-filter"></i> Фильтры
+            </button>
+            <div class="dropdown-menu p-3" style="width: 300px;">
+                <form id="filterForm" onsubmit="return applyFilters(event)">
+                    <div class="mb-2">
+                        <label class="form-label">От</label>
+                        <input class="form-select form-select-sm" type="date" name="date_from" min="2005-01-01" max="2030-12-31" 
+                        value="{{ filters.date_from|default:'' }}"/>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">До</label>
+                        <input class="form-select form-select-sm" type="date" name="date_to" min="2005-01-01" max="2030-12-31" 
+                        value="{{ filters.date_to|default:'' }}"/>
+                    </div>
+                    <div class="mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" 
+                                   name="active_only" id="active_only"
+                                   {% if filters.active_only %}checked{% endif %}>
+                            <label class="form-check-label" for="active_only">
+                                Только активные сеансы
+                            </label>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-check"></i> Применить
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> Сбросить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <h5>Всего записей</h5>
+                        <h2>{{ total_count }}</h2>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h5>Записей на странице</h5>
+                        <div class="input-group input-group-sm" style="width: 100px; margin: 0 auto;">
+                            <input type="number" class="form-control text-center" 
+                                   id="perPageInput" value="{{ per_page }}" min="10" max="100">
+                            <button class="btn btn-outline-primary" onclick="changePerPage()">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h5>Страница</h5>
+                        <h4>{{ current_page }} / {{ total_pages }}</h4>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h5>Фильтры</h5>
+                        {% if filters %}
+                            <span class="badge bg-info">{{ filters|length }} активен</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Нет</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-clock"></i> Детальная статистика сессий</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="sessionStatsTable">
+                <thead>
+                    <tr>
+                        <th>ID сессии</th>
+                        <th>Пользователь</th>
+                        <th>Вход</th>
+                        <th>Выход</th>
+                        <th>Длительность</th>
+                        <th>Персонажей отредактировано</th>
+                        <th>Контента просмотрено</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if session_stats %}
+                    {% for session in session_stats %}
+                    <tr>
+                        <td>
+                            <small>#{{ session.session_id }}</small>
+                        </td>
+                        <td>
+                            <strong>User #{{ session.user_id }}</strong>
+                        </td>
+                        <td>
+                            {{ session.login_date|slice:":19" }}
+                        </td>
+                        <td>
+                            {% if session.logout_date %}
+                            {{ session.logout_date|slice:":19" }}
+                            {% else %}
+                            <span class="badge bg-warning">Активна</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if session.session_duration_minutes %}
+                            {{ session.session_duration_minutes }} мин
+                            {% else %}
+                            <em>Вычисляется...</em>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ session.characters_edited|default:"0" }}
+                        </td>
+                        <td>
+                            {{ session.entities_viewed|default:"0" }}
+                        </td>
+                        <td>
+                            {% if session.logout_date %}
+                            <span class="badge bg-secondary">Завершена</span>
+                            {% else %}
+                            <span class="badge bg-success">Активна</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-info"
+                                onclick="viewSessionDetails('{{ session.session_id }}')">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                            {% if not session.logout_date %}
+                            <button class="btn btn-sm btn-outline-danger"
+                                onclick="terminateSession('{{ session.session_id }}')">
+                                <i class="fas fa-stop"></i>
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center py-4">
+                            <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Нет данных о сессиях</p>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        <!-- Пагинация -->
+        {% if total_pages > 1 %}
+        <nav aria-label="Навигация по страницам">
+            <ul class="pagination justify-content-center">
+                {% if current_page > 1 %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page=1{% for key, value in filters.items %}&{{ key }}={{ value }}{% endfor %}&per_page={{ per_page }}">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ current_page|add:'-1' }}{% for key, value in filters.items %}&{{ key }}={{ value }}{% endfor %}&per_page={{ per_page }}">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for page_num in page_range %}
+                {% if page_num == current_page %}
+                <li class="page-item active"><a class="page-link" href="#">{{ page_num }}</a></li>
+                {% else %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_num }}{% for key, value in filters.items %}&{{ key }}={{ value }}{% endfor %}&per_page={{ per_page }}">
+                        {{ page_num }}
+                    </a>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                {% if current_page < total_pages %} <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ current_page|add:'1' }}{% for key, value in filters.items %}&{{ key }}={{ value }}{% endfor %}&per_page={{ per_page }}">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="?page={{ total_pages }}{% for key, value in filters.items %}&{{ key }}={{ value }}{% endfor %}&per_page={{ per_page }}">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+            </ul>
+        </nav>
+
+        <div class="text-center mt-2">
+            <small class="text-muted">
+                Показаны записи с {{ start_index }} по {{ end_index }} из {{ total_count }}
+            </small>
+        </div>
+        {% endif %}
+
+
+
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+
+        // Вычисляем диапазон страниц для отображения
+    const currentPage = '{{ current_page }}';
+    const totalPages = '{{ total_pages }}';
+    const startIndex = ('{{ current_page }}' - 1) *'{{ per_page }}' + 1;
+    const endIndex = Math.min('{{ current_page }}' * '{{ per_page }}', '{{ total_count }}');
+    
+    // Функции пагинации
+    function changePerPage() {
+        const perPage = document.getElementById('perPageInput').value;
+        if (perPage >= 10 && perPage <= 100) {
+            window.location.href = `?page=1{% for key, value in filters.items %}&{{ key }}={{ value }}{% endfor %}&per_page=${perPage}`;
+        } else {
+            alert('Количество записей на странице должно быть от 10 до 100');
+        }
+    }
+    function loadPage(page) {
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', page);
+        
+        fetch(`/admin/user-stats/ajax/?${params.toString()}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateTable(data.data);
+                    updatePagination(data.pagination);
+                } else {
+                    alert('Ошибка загрузки данных: ' + data.error);
+                }
+            });
+    }
+    
+    // Генерация диапазона страниц для отображения
+    function getPageRange(current, total, delta = 2) {
+        const range = [];
+        const left = current - delta;
+        const right = current + delta;
+        
+        for (let i = 1; i <= total; i++) {
+            if (i === 1 || i === total || (i >= left && i <= right)) {
+                range.push(i);
+            } else if (i === left - 1 || i === right + 1) {
+                range.push('...');
+            }
+        }
+        
+        return range.filter((value, index, self) => self.indexOf(value) === index);
+    }
+    function applyFilters(event) {
+        event.preventDefault();
+        const formData = new FormData(document.getElementById('filterForm'));
+        const params = new URLSearchParams();
+        
+        for (let [key, value] of formData.entries()) {
+            if (value) {
+                params.append(key, value);
+            }
+        }
+        
+        window.location.href = `?page=1&${params.toString()}&per_page={{ per_page }}`;
+        return false;
+    }
+
+    function clearFilters() {
+        window.location.href = '?page=1&per_page={{ per_page }}';
+    }
+    
+    function viewSessionDetails(sessionId) {
+        alert('Детали сессии #' + sessionId + ' будут через API');
+    }
+
+    function terminateSession(sessionId) {
+        if (confirm('Вы уверены, что хотите завершить эту сессию?')) {
+            alert('Завершение сессии #' + sessionId + ' будет через API');
+        }
+    }
+
+    function filterByPeriod(period) {
+        alert('Фильтрация по периоду: ' + period + ' будет через API');
+    }
+
+    function exportSessions() {
+        alert('Экспорт статистики сессий будет через API');
+    }
+
+    // Инициализация DataTable
+    $(document).ready(function () {
+        $('#sessionStatsTable').DataTable({
+            pageLength: 25,
+            order: [[2, 'desc']],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/ru.json'
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

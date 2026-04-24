@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Мои уведомления{% endblock %}
+{% block page_title %}Мои уведомления{% endblock %}
+
+{% block page_actions %}
+<div class="btn-toolbar mb-2 mb-md-0">
+</div>
+{% endblock %}
+
+{% block content %}
+
+
+<div class="card">
+    <div class="card-body">
+        {% if notifications %}
+            <div class="list-group" id="notificationsList">
+                {% for notification in notifications %}
+                <div class="list-group-item list-group-item-action {% if not notification.is_read %}list-group-item-light{% endif %}" 
+                     data-type="{{ notification.notification_type }}" 
+                     data-read="{{ notification.is_read }}">
+                    <div class="d-flex w-100 justify-content-between">
+                        <div class="mb-1 w-100">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                            <i class="fas fa-bell text-secondary me-2"></i>
+                                            Уведомление
+                                            <small class="text-muted">
+                                                (ID: #{{ notification.notification_id }})
+                                            </small>
+                                    </h6>
+                                    
+                                    <p class="mb-1">
+                                        {{ notification.notification_type|default:"Тип не определен" }}
+                                    </p>
+                                    
+                                    {% if notification.message %}
+                                        <small class="text-muted">{{ notification.message }}</small>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="text-end">
+                                    <small class="text-muted d-block">
+                                        {{ notification.created_date|slice:":16" }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">У вас нет уведомлений</h4>
+                <p class="text-muted">Здесь будут появляться системные уведомления и сообщения</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+
+{% block extra_js %}
+<script>
+   
+    function markAsRead(notificationId) {
+        alert('Отметка уведомления #' + notificationId + ' как прочитанного будет через API');
+        // Здесь будет AJAX запрос
+    }
+    
+    function markAllAsRead() {
+        if (confirm('Отметить все уведомления как прочитанные?')) {
+            alert('Отметка всех уведомлений будет через API');
+        }
+    }
+    
+    function deleteNotification(notificationId) {
+        if (confirm('Удалить это уведомление?')) {
+            alert('Удаление уведомления #' + notificationId + ' будет через API');
+        }
+    }
+    
+    function deleteAllRead() {
+        if (confirm('Удалить все прочитанные уведомления?')) {
+            alert('Удаление прочитанных уведомлений будет через API');
+        }
+    }
+    
+    function viewRelated(entityId, type) {
+        if (type.includes('homebrew')) {
+            alert('Переход к контенту #' + entityId + ' будет через API');
+            // window.location.href = "/homebrew/" + entityId + "/";
+        } else {
+            alert('Переход будет реализован позже');
+        }
+    }
+    
+    function saveSettings() {
+        alert('Сохранение настроек уведомлений будет через API');
+    }
+    
+    // Автоматическое обновление уведомлений каждые 30 секунд
+    setInterval(function() {
+        // Здесь будет AJAX запрос для проверки новых уведомлений
+        console.log('Проверка новых уведомлений...');
+    }, 30000);
+</script>
+{% endblock %}
+{% endblock %}

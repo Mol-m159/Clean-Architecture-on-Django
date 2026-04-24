@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Мой контент{% endblock %}
+{% block page_title %}Мой контент (Homebrew){% endblock %}
+
+{% block page_actions %}
+<div class="btn-toolbar mb-2 mb-md-0">
+    <div class="btn-group me-2">
+        <a href="#" class="btn btn-sm btn-success" onclick="createHomebrew()">
+            <i class="fas fa-plus"></i> Создать контент
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary active" onclick="filterByStatus('all')">
+                        Все <span class="badge bg-primary">{{ total_count }}</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-success" onclick="filterByStatus('approved')">
+                        Одобрено <span class="badge bg-success">{{ approved_count }}</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-warning" onclick="filterByStatus('moderation')">
+                        На модерации <span class="badge bg-warning">{{ moderation_count }}</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="filterByStatus('rejected')">
+                        Отклонено <span class="badge bg-danger">{{ rejected_count }}</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="filterByStatus('draft')">
+                        Черновики <span class="badge bg-secondary">{{ draft_count }}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if homebrew_items %}
+            <div class="table-responsive">
+                <table class="table table-hover" id="homebrewTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Название</th>
+                            <th>Тип</th>
+                            <th>Система</th>
+                            <th>Статус</th>
+                            <th>Дата создания</th>
+                            <th>Просмотры</th>
+                            <th>Версии</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in homebrew_items %}
+                        <tr data-status="{{ item.status }}">
+                            <td>#{{ item.entity_id }}</td>
+                            <td>
+                                <strong>
+                                        {{ item.entity_type|default:"Контент" }} #{{ item.entity_id }}
+                                </strong>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">
+                                    {{ item.entity_type|default:"Неизвестно" }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">
+                                    Система #{{ item.system_id }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if item.status == 'approved' %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check"></i> Одобрено
+                                    </span>
+                                {% elif item.status == 'moderation' %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock"></i> На модерации
+                                    </span>
+                                {% elif item.status == 'rejected' %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times"></i> Отклонено
+                                    </span>
+                                {% elif item.status == 'draft' %}
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-edit"></i> Черновик
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark">{{ item.status }}</span>
+                                {% endif %}
+                                
+                                {% if item.status == 'rejected' and item.rejection_reason %}
+                                    <br>
+                                    <small class="text-danger">{{ item.rejection_reason }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.created_date|slice:":10" }}</td>
+                            <td>
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-eye"></i> {{ item.view_count|default:"0" }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-dark">
+                                    <i class="fas fa-code-branch"></i> {{ item.version_count|default:"1" }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'homebrew_detail' item.entity_id %}"  class="btn btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if item.status == 'draft' or item.status == 'rejected' %}
+                                        <a href="#" class="btn btn-outline-success" onclick="editHomebrew('{{ item.entity_id }}')">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    {% endif %}
+                                    {% if item.status == 'draft' %}
+                                        <a href="#" class="btn btn-outline-info" onclick="submitForModeration('{{ item.entity_id }}')">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </a>
+                                    {% endif %}
+                                    <a href="#" class="btn btn-outline-danger" onclick="deleteHomebrew('{{ item.entity_id }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-magic fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">У вас еще нет созданного контента</h4>
+                <p class="text-muted">Создайте свой первый homebrew объект: заклинание, предмет, класс или расу</p>
+                <button class="btn btn-success btn-lg" onclick="createHomebrew()">
+                    <i class="fas fa-plus"></i> Создать первый контент
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Простые функции для кнопок
+function createHomebrew() {
+    const systemId = prompt('Введите ID системы:');
+    if (!systemId) return;
+    
+    const entityType = prompt('Введите тип контента (spell, item, class, race, ability, other):', 'other');
+    if (!entityType) return;
+    
+    fetch('{% url "api_homebrew_create" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: JSON.stringify({ 
+            system_id: systemId,
+            entity_type: entityType
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Контент создан! ID: ' + data.entity_id);
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка сети');
+    });
+}
+
+function editHomebrew(itemId) {
+    const newSystemId = prompt('Введите новый ID системы:');
+    if (!newSystemId) return;
+    
+    const newType = prompt('Введите новый тип (spell, item, class, race, ability, other):', 'other');
+    if (!newType) return;
+    
+    fetch(`/user/api/homebrew/${itemId}/update/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: JSON.stringify({ 
+            system_id: newSystemId,
+            entity_type: newType
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Контент обновлен!');
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка сети');
+    });
+}
+
+function submitForModeration(itemId) {
+    if (!confirm('Отправить контент #' + itemId + ' на модерацию?')) {
+        return;
+    }
+    
+    fetch(`/user/api/homebrew/${itemId}/submit/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Контент отправлен на модерацию!');
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка сети');
+    });
+}
+
+function deleteHomebrew(itemId) {
+    if (!confirm('Вы уверены, что хотите удалить контент #' + itemId + '?')) {
+        return;
+    }
+    
+    fetch(`/user/api/homebrew/${itemId}/delete/`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Контент удален');
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка сети');
+    });
+}
+
+function filterByStatus(status) {
+    const rows = document.querySelectorAll('#homebrewTable tbody tr');
+    rows.forEach(row => {
+        if (status === 'all' || row.dataset.status === status) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}
+{% endblock %}

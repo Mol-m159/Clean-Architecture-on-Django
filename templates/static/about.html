@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}О проекте{% endblock %}
+{% block page_title %}О проекте{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h4>НРИ Аналитика</h4>
+                <p>Система анализа пользовательской активности для платформы настольных ролевых игр.</p>
+                
+                <h5 class="mt-4">Основные функции:</h5>
+                <ul>
+                    <li>Создание и управление персонажами</li>
+                    <li>Разработка пользовательского контента (homebrew)</li>
+                    <li>Модерация пользовательского контента</li>
+                    <li>Статистика пользовательской активности</li>
+                    <li>Аналитика использования игровых систем</li>
+                </ul>
+                
+                <h5 class="mt-4">Роли пользователей:</h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card text-white bg-primary mb-3">
+                            <div class="card-header">Администратор</div>
+                            <div class="card-body">
+                                <p class="card-text">Полный доступ ко всем функциям системы, просмотр статистики, управление пользователями.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-dark bg-warning mb-3">
+                            <div class="card-header">Модератор</div>
+                            <div class="card-body">
+                                <p class="card-text">Проверка пользовательского контента, одобрение или отклонение записей.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-success mb-3">
+                            <div class="card-header">Пользователь</div>
+                            <div class="card-body">
+                                <p class="card-text">Создание персонажей, разработка контента, просмотр материалов.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h5 class="mt-4">Технологии:</h5>
+                <ul>
+                    <li>Backend: Django, Django REST Framework</li>
+                    <li>Frontend: Bootstrap 5, Chart.js</li>
+                    <li>База данных: Microsoft SQL Server</li>
+                    <li>API: RESTful API</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Статистика системы</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>Пользователей</span>
+                        <span class="badge bg-primary">1,248</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>Персонажей</span>
+                        <span class="badge bg-success">3,567</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>Контента</span>
+                        <span class="badge bg-info">2,189</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>Систем</span>
+                        <span class="badge bg-warning">8</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>Сессий сегодня</span>
+                        <span class="badge bg-danger">147</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5>Контакты</h5>
+            </div>
+            <div class="card-body">
+                <p><i class="fas fa-envelope"></i> support@nri-analytics.ru</p>
+                <p><i class="fas fa-globe"></i> https://nri-analytics.ru</p>
+                <p><i class="fas fa-book"></i> Документация API</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
